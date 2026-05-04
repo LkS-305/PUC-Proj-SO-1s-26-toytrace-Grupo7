@@ -40,39 +40,45 @@ static void fill_event_from_regs(pid_t pid,
 //char *const argv[] - programa alvo e seus argumentos
 static pid_t launch_tracee(char *const argv[])
 {
-    /*
-     * TODO Semana 2:
-     *
-     * Crie o processo monitorado.
-     *
-     * Fluxo esperado:
-     * - fork()
-     * - no filho:
-     *   - ptrace(PTRACE_TRACEME, ...)
-     *   - raise(SIGSTOP)
-     *   - execvp(argv[0], argv)
-     * - no pai:
-     *   - retornar o pid do filho
-     *
-     * Em erro, imprima uma mensagem com perror() e retorne -1.
-     */
-    fprintf(stderr, "erro: TODO Semana 2: implementar launch_tracee()\n");
+    
+    pid_t pid = fork();
+
+    if(pid < 0) {
+        perror("fork");
+        return -1;
+    } else if(pid == 0) {
+        //filho
+        if(ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) { //efetua o ptrace para que o pai possa monitorar o filho
+            perror("ptrace TRACEME");       //se o ptrace der erro, printa o erro e retorna -1
+            return -1;
+        }
+
+        raise(SIGSTOP); //para o filho para o pai configurar o ptrace antes de executar o programa alvo
+
+        execvp(argv[0], argv);
+        perror("execvp");
+        return -1;
+    } else {
+        //pai
+        wait_for_initial_stop(child); //espera o filho parar para configurar o ptrace
+        return pid;
+    }
+    
     return -1;
 }
 
 //pai espera o filho parar pela primeira vez quando o filho fizer SIGSTOP para ent o pai configurar o ptrace antes do filho executar o programa alvo
 static int wait_for_initial_stop(pid_t child)
 {
-    /*
-     * TODO Semana 2:
-     *
-     * O filho chama raise(SIGSTOP) antes de executar o programa alvo.
-     * O pai precisa esperar essa parada inicial com waitpid().
-     *
-     * Retorne 0 se o filho parou como esperado, -1 em erro.
-     */
-    fprintf(stderr, "erro: TODO Semana 2: implementar wait_for_initial_stop()\n");
-    return -1;
+    int status;
+    waitpid(child, &status, 0);
+
+    if(!WIFSTOPPED(status)) {
+        fprintf(stderr, "erro: filho nao parou como esperado\n");
+        return -1;
+    } else{
+        return 0;
+    }
 }
 
 //onde configurar opções do ptrace

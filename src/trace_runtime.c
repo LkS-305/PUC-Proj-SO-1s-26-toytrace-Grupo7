@@ -60,7 +60,8 @@ static pid_t launch_tracee(char *const argv[])
         return -1;
     } else {
         //pai
-        wait_for_initial_stop(child); //espera o filho parar para configurar o ptrace
+        //wait_for_initial_stop(child); lucas disse que não precisa chamar o wait_for_initial_stop aqui pq no codigo principal ja direciona para o wait depois
+        //espera o filho parar para configurar o ptrace
         return pid;
     }
     

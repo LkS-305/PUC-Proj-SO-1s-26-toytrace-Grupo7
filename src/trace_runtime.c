@@ -102,7 +102,10 @@ static int configure_trace_options(pid_t child)
 //mandar o filho continuar rodando até chegar na próxima syscall.
 static int resume_until_next_syscall(pid_t child, int signal_to_deliver)
 {
-    /*
+	if(ptrace(ptrace_syscall, child, NULL, signal_to_deliver)<0){
+		perror("ptrace SYSCALL");
+		return -1;	
+   /*
      * TODO Semana 3:
      *
      * Use ptrace(PTRACE_SYSCALL, ...) para deixar o filho executar ate a

@@ -115,11 +115,35 @@ static int resume_until_next_syscall(pid_t child, int signal_to_deliver)
      */
     fprintf(stderr, "erro: TODO Semana 3: implementar resume_until_next_syscall()\n");
     return -1;
+    }
 }
 
 //espera o filho parar e identifica o motivo da parada (syscall, término ou erro)
 static int wait_for_syscall_stop(pid_t child, int *status)
 {
+    if(waitpid(child, status, 0) < 0) {     //Realiza o waitpid
+        perror("waitpid");                  //caso de erro, printa o erro e retorna -1
+        return -1;
+    }
+
+    if(WIFEXITED(*status) || WIFSIGNALED(*status)) {   //se o filho terminou normalmente ou por sinal, retorna 0
+        return 0;
+    }
+
+    //ESTOU EM DÚVIDA EM COMO DEVO TRATAR O CASO DE PARADA POR SIGTRAP
+    if(WIFSTOPPED(*status) && (WSTOPSIG(*status) == (SIGTRAP | 0x80))) {   //se o filho parou, confere se foi devido a uma syscall e então retorna 1
+        return 1;       //Usa o OR lógico '|' para realizar um OR no nível de bit, "somando" o sinal do sigtrap (101), ao 10000000, para conferir se o WSTOPSIG() corresponde ao sinal de syscall-stop do PTRACE_O_TRACESYSGOOD
+    }
+    if(WIFSTOPPED(*status) && (WSTOPSIG(*status) == SIGTRAP)){
+        return 1;
+    }
+    /*
+    ou se já faço direto
+    if(WIFSTOPPED(*status) && (WSTOPSIG(status) & 0x7f) == SIGTRAP) {   
+        return 1;       //Realiza o contrário do "|", aplicando um AND lógico para conferir se o WSTOPSIG() sem o bit 0x80 corresponde ao sinal de SIGTRAP
+    }
+    */
+    
     /*
      * TODO Semana 3:
      *
@@ -136,8 +160,6 @@ static int wait_for_syscall_stop(pid_t child, int *status)
      * - com PTRACE_O_TRACESYSGOOD, syscall-stops aparecem com bit 0x80.
      * - paradas SIGTRAP comuns nao devem ser entregues de volta ao filho.
      */
-    fprintf(stderr, "erro: TODO Semana 3: implementar wait_for_syscall_stop()\n");
-    return -1;
 }
 
 //função principal

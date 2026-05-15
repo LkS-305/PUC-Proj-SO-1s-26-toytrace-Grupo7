@@ -134,7 +134,7 @@ static int wait_for_syscall_stop(pid_t child, int *status)
     if(WIFSTOPPED(*status) && (WSTOPSIG(*status) == (SIGTRAP | 0x80))) {   //se o filho parou, confere se foi devido a uma syscall e então retorna 1
         return 1;       //Usa o OR lógico '|' para realizar um OR no nível de bit, "somando" o sinal do sigtrap (101), ao 10000000, para conferir se o WSTOPSIG() corresponde ao sinal de syscall-stop do PTRACE_O_TRACESYSGOOD
     }
-    if(WIFSTOPPED(*status) && (WSTOPSIG(*status) == SIGTRAP)){
+    if(WIFSTOPPED(*status) && (WSTOPSIG(*status) == SIGTRAP)){      //Primeiro confiro se foi parada por sycall e em seguida confiro se foi parada por sigtrap comum, mas ambos retornam o mesmo (por isso fiquei em dúvida se está certo)
         return 1;
     }
     /*
